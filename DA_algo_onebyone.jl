@@ -6,29 +6,29 @@ function DA_onebyone(props, accs, prop_prefs, acc_prefs, acc_cap)
     prop_matches = Dict(a => [] for a in props)
     acc_matches["outside"] = []
     prop_matches["outside"] = []
+
     algo_lim = 5000
     count = 1
 
     while !isempty(free_props) && count < algo_lim
         for prop in free_props
             apply = first(prop_prefs_copy[prop])
-            if in(prop, acc_prefs[apply])
-                if length(acc_matches[apply]) < acc_cap[apply]
+            if in(prop, acc_prefs[apply]) # check individual rationality
+                if length(acc_matches[apply]) < acc_cap[apply] # if the acceptor is not full
                     push!(acc_matches[apply], prop)
                     push!(prop_matches[prop], apply)
                     delete!(free_props, prop)
                 else
                     worst_match = 1
-                    for current_match in acc_matches[apply]
+                    for current_match in acc_matches[apply] # find the worst prefered match
                         order = findfirst(==(current_match), acc_prefs[apply])
                         if order > worst_match
                             worst_match = order
                         end
                     end
-                    if findfirst(==(prop), acc_prefs[apply]) < worst_match
-                        rejected = acc_prefs[apply][worst_match]
-                        #if acceptor prefers the new prop
-                        filter!(e -> e ≠ rejected, acc_matches[apply])
+                    if findfirst(==(prop), acc_prefs[apply]) < worst_match # if the new proposer is prefered than the worst one
+                        rejected = acc_prefs[apply][worst_match] # rejected proposer
+                        filter!(e -> e ≠ rejected, acc_matches[apply]) # remove the rejected proposer
                         push!(acc_matches[apply], prop)
                         push!(prop_matches[prop], apply)
                         delete!(free_props, prop)
