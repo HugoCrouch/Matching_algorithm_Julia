@@ -25,6 +25,7 @@ function FDA(props, accs, prop_prefs, acc_prefs, acc_cap, regions, acc_region, t
     while !isempty(free_props) && count < algo_lim
         wait_list = Dict(acc => [] for acc in accs)
         current = Dict(reg => 0 for reg in regions)
+        print(count, ": free:", free_props, "\n")
         
         for prop in free_props
             flag = false
@@ -68,12 +69,13 @@ function FDA(props, accs, prop_prefs, acc_prefs, acc_cap, regions, acc_region, t
                 pick = false
                 for acc_p in reg_prior[reg]
                     if current[reg] == region_lim[reg]
-                        nopick = Inf
                         break
                     end
                     if length(acc_matches[acc_p]) < acc_cap[acc_p] && !isempty(wait_list[acc_p])
                         push!(acc_matches[acc_p], first(wait_list[acc_p]))
-                        delete!(wait_list, first(wait_list[acc_p]))
+                        print(acc_p, " wait list : ", wait_list, "\n")
+                        print(acc_p, " accepted ", first(wait_list[acc_p]), "\n")
+                        wait_list[acc_p] = setdiff!(wait_list[acc_p], [first(wait_list[acc_p])])
                         current[reg] += 1
                         pick = true
                     end
@@ -83,7 +85,6 @@ function FDA(props, accs, prop_prefs, acc_prefs, acc_cap, regions, acc_region, t
                 end
             end
         end
-
         for acc in accs
             for kept in acc_matches[acc]
                 delete!(free_props, kept[1])
@@ -133,6 +134,20 @@ regions = ["N", "S"]
 acc_region = Dict("X" => "N", "Y" => "N", "Z" => "S")
 target_lim = Dict("X" => 2, "Y" => 1, "Z" => 2) #must be smaller than or equal to acc_cap
 reg_prior = Dict("N" => ["X", "Y"], "S" => ["Z"])
+
+
+
+props = ["$i" for i in 1:10]
+accs = ["A", "B"]
+
+prop_prefs = Dict(i in 1:3 ? "$i" => [("A",1)] : "$i" => [("B",1)] for i in 1:10)
+acc_prefs = Dict("A" => [("$i", i) for i in 1:10],
+                    "B" => [("$i", i) for i in 1:10])
+acc_cap = Dict("A" => 10, "B" => 10)
+regions = ["N"]
+acc_region = Dict("A" => "N", "B" => "N")
+target_lim = Dict("A" => 5, "B" => 5) #must be smaller than or equal to acc_cap
+reg_prior = Dict("N" => ["A", "B"])
 
 matches = FDA(props, accs, prop_prefs, acc_prefs, acc_cap, regions, acc_region, target_lim, reg_prior)
 println(matches)
